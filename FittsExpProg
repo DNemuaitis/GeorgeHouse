@@ -1,0 +1,263 @@
+Imports System.IO
+Public Class Form1
+    Dim PointArrayX(5999999) As Double
+    Dim PointArrayY(5999999) As Double
+    Dim TimeArrayS(5999999) As Double
+    Dim HoverPositionArray(59999) As Point
+    Dim HoverPositionArrayTime(59999) As Double
+    Dim CountHoverPosition As Integer = 0
+    Dim Counter As Integer = 0
+    Dim PointOnPosition As Point
+    Dim FileNumber As Integer = 1
+    Dim RandomNumber As Double
+    Dim CountID As Integer
+    Dim OriginX As Double
+    Dim OriginY As Double
+    Private Sub btnStart_Click(sender As Object, e As EventArgs) Handles btnStart.Click
+        Timer1.Start()
+        Cursor.Position = pnlSecondary1.PointToScreen(New Point(68 / 2, 341 / 2))
+        RandomNumber = RandomId()
+        Picture_Change()
+        OriginX = CDbl(Cursor.Position.X)
+        OriginY = CDbl(Cursor.Position.Y)
+    End Sub
+    Function RandomId() As Double
+        Dim RandomCountID As New Random
+        Return RandomCountID.Next(1, 8)
+    End Function
+    Function PointXY() As Point
+        Return Cursor.Position
+    End Function
+    Private Sub Timer1_Tick(sender As Object, e As EventArgs) Handles Timer1.Tick
+        lblClock.Text = txtClock.Text & "s" 'displays the seconds
+        txtClock.Text = (CDbl(txtClock.Text) + 0.01) 'allows the second to form
+        TimeArrayS(Counter) = CDbl(txtClock.Text)
+        PointArrayX(Counter) = PointOnPosition.X
+        PointArrayY(Counter) = PointOnPosition.Y
+        Counter += 1
+        lblPositionX.Text = (PointOnPosition.X).ToString
+        lblPositionY.Text = (PointOnPosition.Y).ToString
+        RandomNumber = RandomId()
+        If CountID = 1 Then
+            Picture_Change()
+        End If
+    End Sub
+    Sub Picture_Change()
+        Dim NewPic As Image = Image.FromFile("gotoo.bmp")
+        If RandomNumber = 1 Then
+            CountID = 0
+            picPoint1.Image = NewPic
+        End If
+        If RandomNumber = 2 Then
+            CountID = 0
+            picPoint2.Image = NewPic
+        End If
+        If RandomNumber = 3 Then
+            CountID = 0
+            picPoint3.Image = NewPic
+        End If
+        If RandomNumber = 4 Then
+            CountID = 0
+            picPoint4.Image = NewPic
+        End If
+        If RandomNumber = 5 Then
+            CountID = 0
+            picPoint5.Image = NewPic
+        End If
+        If RandomNumber = 6 Then
+            CountID = 0
+            picPoint6.Image = NewPic
+        End If
+        If RandomNumber = 7 Then
+            CountID = 0
+            picPoint7.Image = NewPic
+        End If
+        If RandomNumber = 8 Then
+            CountID = 0
+            picPoint8.Image = NewPic
+        End If
+    End Sub
+    Private Sub btnStop_Click(sender As Object, e As EventArgs) Handles btnStop.Click
+        If Not Counter = 0 Then
+            Dim FileNumberSave As StreamReader = File.OpenText("Save.txt")
+            Dim PositionInTextFile1 As Integer = 6
+            Dim PositionInTextFile2 As Integer = 0
+            Dim DistanceArrayX(59999) As Double
+            Dim DistanceArrayY(59999) As Double
+            Dim DistanceArrayM(59999) As Double
+            Dim DistanceArrayH(59999) As Double
+            Dim AngleArrayAlpha(59999) As Double
+            Dim AngleArrayBeta(59999) As Double
+            Dim RightAngle As Double = (Math.PI) / 2
+            Dim CountDistance As Integer = CountHoverPosition
+            Timer1.Stop()
+            Dim Count As Integer
+            FileNumber = CInt(FileNumberSave.ReadLine)
+            Dim FileName As StreamWriter = File.CreateText("Test" & (FileNumber).ToString & ".txt")
+            FileNumberSave.Close()
+            FileName.WriteLine("Trial: " & (FileNumber).ToString & vbNewLine)
+            If Not CountHoverPosition = 0 Then
+                DistanceArrayX(0) = (CDbl(HoverPositionArray(0).X) - OriginX)
+                DistanceArrayY(0) = (CDbl(HoverPositionArray(0).Y) - OriginY)
+                DistanceArrayM(0) = (DistanceArrayY(0) / DistanceArrayX(0))
+                DistanceArrayH(0) = Math.Sqrt((DistanceArrayY(0) * DistanceArrayY(0)) + (DistanceArrayX(0) * DistanceArrayX(0)))
+                AngleArrayAlpha(0) = Math.Asin((DistanceArrayY(0)) / (DistanceArrayH(0)))
+                AngleArrayBeta(0) = RightAngle - AngleArrayAlpha(0)
+                For Count = 1 To (CountDistance)
+                    DistanceArrayX(Count) = (CDbl(HoverPositionArray(Count).X) - CDbl(HoverPositionArray(Count - 1).X))
+                    DistanceArrayY(Count) = (CDbl(HoverPositionArray(Count).Y) - CDbl(HoverPositionArray(Count - 1).Y))
+                    DistanceArrayM(Count) = (DistanceArrayY(Count) / DistanceArrayX(Count))
+                    DistanceArrayH(Count) = Math.Sqrt((DistanceArrayY(Count) ^ 2) + (DistanceArrayX(Count) ^ 2))
+                    AngleArrayAlpha(Count) = Math.Asin((DistanceArrayY(Count)) / (DistanceArrayH(Count)))
+                    AngleArrayBeta(Count) = RightAngle - AngleArrayAlpha(Count)
+                Next
+            End If
+            If Not CountHoverPosition = 0 Then
+                FileName.WriteLine("For goal information go too line: 7")
+                PositionInTextFile1 = 7
+                PositionInTextFile2 = 1
+            End If
+            FileName.WriteLine("For mouse tracking information go too line: " & (CountHoverPosition * 10 + PositionInTextFile1 + PositionInTextFile2).ToString & vbNewLine)
+            FileName.WriteLine("mouse tracking goal information:")
+            For Count = 0 To (CountHoverPosition - 1)
+                FileName.WriteLine("X: " & (HoverPositionArray(Count).X).ToString)
+                FileName.WriteLine("XD: " & (DistanceArrayX(Count)).ToString)
+                FileName.WriteLine("Y: " & (HoverPositionArray(Count).Y).ToString)
+                FileName.WriteLine("YD: " & (DistanceArrayY(Count)).ToString)
+                FileName.WriteLine("S: " & HoverPositionArrayTime(Count).ToString)
+                FileName.WriteLine("HD: " & (DistanceArrayH(Count)).ToString)
+                FileName.WriteLine("M: " & (DistanceArrayM(Count)).ToString)
+                FileName.WriteLine("Angle Alpha: " & (AngleArrayAlpha(Count)).ToString)
+                FileName.WriteLine("Angle Beta: " & (AngleArrayBeta(Count)).ToString & vbNewLine)
+            Next
+            FileName.WriteLine("mouse tracking information per second:")
+            For Count = 0 To (Counter - 1)
+                FileName.WriteLine("X: " & (PointArrayX(Count)).ToString)
+                FileName.WriteLine("Y: " & (PointArrayY(Count)).ToString)
+                FileName.WriteLine("S: " & TimeArrayS(Count).ToString & vbNewLine)
+                txtClock.Text = "0.0"
+            Next
+            For Count = 0 To (Counter - 1)
+                PointArrayX(Count) = 0
+                PointArrayY(Count) = 0
+                TimeArrayS(Count) = 0
+            Next
+            Counter = 0
+            CountHoverPosition = 0
+            FileName.Close()
+            FileNumber += 1
+            Dim FileNumberSaveRead As StreamWriter = File.CreateText("Save.txt")
+            FileNumberSaveRead.WriteLine((FileNumber).ToString)
+            FileNumberSaveRead.Close()
+            Dim NewPic As Image = Image.FromFile("DontGoToo.bmp")
+            picPoint1.Image = NewPic
+            picPoint2.Image = NewPic
+            picPoint3.Image = NewPic
+            picPoint4.Image = NewPic
+            picPoint5.Image = NewPic
+            picPoint6.Image = NewPic
+            picPoint7.Image = NewPic
+            picPoint8.Image = NewPic
+        End If
+    End Sub
+
+    Private Sub picPoint1_MouseMove(sender As Object, e As MouseEventArgs) Handles pnlSecondary2.MouseMove, pnlSecondary1.MouseMove, pnlPrimary.MouseMove, picPoint8.MouseMove, picPoint7.MouseMove, picPoint6.MouseMove, picPoint5.MouseMove, picPoint4.MouseMove, picPoint3.MouseMove, picPoint2.MouseMove, picPoint1.MouseMove
+        PointOnPosition = PointXY()
+    End Sub
+    Private Sub picPoint1_MouseHover(sender As Object, e As EventArgs) Handles picPoint1.MouseHover
+        Dim PicType As Bitmap = Image.FromFile("gotoo.bmp")
+        Dim Pic1FileName As Bitmap = picPoint1.Image
+        If PicType.ToString = Pic1FileName.ToString Then
+            CountID = 1
+            Dim NewPic As Image = Image.FromFile("DontGoToo.bmp")
+            picPoint1.Image = NewPic
+            HoverPositionArray(CountHoverPosition) = PointOnPosition
+            HoverPositionArrayTime(CountHoverPosition) = CDbl(txtClock.Text)
+            CountHoverPosition += 1
+        End If
+    End Sub
+    Private Sub picPoint2_MouseHover(sender As Object, e As EventArgs) Handles picPoint2.MouseHover
+        Dim PicType As Bitmap = Image.FromFile("gotoo.bmp")
+        Dim Pic2FileName As Bitmap = picPoint2.Image
+        If PicType.ToString = Pic2FileName.ToString Then
+            CountID = 1
+            Dim NewPic As Image = Image.FromFile("DontGoToo.bmp")
+            picPoint2.Image = NewPic
+            HoverPositionArray(CountHoverPosition) = PointOnPosition
+            HoverPositionArrayTime(CountHoverPosition) = CDbl(txtClock.Text)
+            CountHoverPosition += 1
+        End If
+    End Sub
+    Private Sub picPoint3_MouseHover(sender As Object, e As EventArgs) Handles picPoint3.MouseHover
+        Dim PicType As Bitmap = Image.FromFile("gotoo.bmp")
+        Dim Pic3FileName As Bitmap = picPoint3.Image
+        If PicType.ToString = Pic3FileName.ToString Then
+            CountID = 1
+            Dim NewPic As Image = Image.FromFile("DontGoToo.bmp")
+            picPoint3.Image = NewPic
+            HoverPositionArray(CountHoverPosition) = PointOnPosition
+            HoverPositionArrayTime(CountHoverPosition) = CDbl(txtClock.Text)
+            CountHoverPosition += 1
+        End If
+    End Sub
+    Private Sub picPoint4_MouseHover(sender As Object, e As EventArgs) Handles picPoint4.MouseHover
+        Dim PicType As Bitmap = Image.FromFile("gotoo.bmp")
+        Dim Pic4FileName As Bitmap = picPoint4.Image
+        If PicType.ToString = Pic4FileName.ToString Then
+            CountID = 1
+            Dim NewPic As Image = Image.FromFile("DontGoToo.bmp")
+            picPoint4.Image = NewPic
+            HoverPositionArray(CountHoverPosition) = PointOnPosition
+            HoverPositionArrayTime(CountHoverPosition) = CDbl(txtClock.Text)
+            CountHoverPosition += 1
+        End If
+    End Sub
+    Private Sub picPoint5_MouseHover(sender As Object, e As EventArgs) Handles picPoint5.MouseHover
+        Dim PicType As Bitmap = Image.FromFile("gotoo.bmp")
+        Dim Pic5FileName As Bitmap = picPoint5.Image
+        If PicType.ToString = Pic5FileName.ToString Then
+            CountID = 1
+            Dim NewPic As Image = Image.FromFile("DontGoToo.bmp")
+            picPoint5.Image = NewPic
+            HoverPositionArray(CountHoverPosition) = PointOnPosition
+            HoverPositionArrayTime(CountHoverPosition) = CDbl(txtClock.Text)
+            CountHoverPosition += 1
+        End If
+    End Sub
+    Private Sub picPoint6_MouseHover(sender As Object, e As EventArgs) Handles picPoint6.MouseHover
+        Dim PicType As Bitmap = Image.FromFile("gotoo.bmp")
+        Dim Pic6FileName As Bitmap = picPoint6.Image
+        If PicType.ToString = Pic6FileName.ToString Then
+            CountID = 1
+            Dim NewPic As Image = Image.FromFile("DontGoToo.bmp")
+            picPoint6.Image = NewPic
+            HoverPositionArray(CountHoverPosition) = PointOnPosition
+            HoverPositionArrayTime(CountHoverPosition) = CDbl(txtClock.Text)
+            CountHoverPosition += 1
+        End If
+    End Sub
+    Private Sub picPoint7_MouseHover(sender As Object, e As EventArgs) Handles picPoint7.MouseHover
+        Dim PicType As Bitmap = Image.FromFile("gotoo.bmp")
+        Dim Pic7FileName As Bitmap = picPoint7.Image
+        If PicType.ToString = Pic7FileName.ToString Then
+            CountID = 1
+            Dim NewPic As Image = Image.FromFile("DontGoToo.bmp")
+            picPoint7.Image = NewPic
+            HoverPositionArray(CountHoverPosition) = PointOnPosition
+            HoverPositionArrayTime(CountHoverPosition) = CDbl(txtClock.Text)
+            CountHoverPosition += 1
+        End If
+    End Sub
+    Private Sub picPoint8_MouseHover(sender As Object, e As EventArgs) Handles picPoint8.MouseHover
+        Dim PicType As Bitmap = Image.FromFile("gotoo.bmp")
+        Dim Pic8FileName As Bitmap = picPoint8.Image
+        If PicType.ToString = Pic8FileName.ToString Then
+            CountID = 1
+            Dim NewPic As Image = Image.FromFile("DontGoToo.bmp")
+            picPoint8.Image = NewPic
+            HoverPositionArray(CountHoverPosition) = PointOnPosition
+            HoverPositionArrayTime(CountHoverPosition) = CDbl(txtClock.Text)
+            CountHoverPosition += 1
+        End If
+    End Sub
+End Class
